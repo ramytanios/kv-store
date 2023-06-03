@@ -1,2 +1,2 @@
-#!/bin/bash
+#!/bin/sh
 live-server --entry-file=index.html

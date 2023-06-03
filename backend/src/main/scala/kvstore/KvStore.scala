@@ -13,10 +13,10 @@ trait KvStore[F[_], K, V] {
   def get(key: K): F[V]
 
   /** list of all key-value pairs */
-  def kvs: F[List[(K, V)]]
+  def entries: F[List[(K, V)]]
 
   /** number of keys */
-  def nKeys: F[Int]
+  def size: F[Int]
 }
 
 object KvStore {
@@ -45,9 +45,9 @@ object KvStore {
             )
           }
 
-      override def kvs: F[List[(K, V)]] = store.get.map(_.toList)
+      override def entries: F[List[(K, V)]] = store.get.map(_.toList)
 
-      override def nKeys: F[Int] = store.get.map(_.size)
+      override def size: F[Int] = store.get.map(_.size)
 
     }
 
