@@ -1,11 +1,10 @@
 lazy val scala213 = "2.13.10"
+Global / semanticdbEnabled := true 
+Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / scalaVersion := scala213
 ThisBuild / organization := "io.github.ramytanios"
 ThisBuild / organizationName := "ramytanios"
 ThisBuild / startYear := Some(2023)
-ThisBuild / developers := List(
-  tlGitHubDev("ramytanios", "Ramy Tanios")
-)
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
 lazy val ff4sVersion = "0.16.0"
@@ -33,7 +32,7 @@ lazy val backend =
     .enablePlugins(GitVersioning)
     .settings(
       commonSettings,
-      scalacOptions := "-Xfatal-warnings",
+      scalacOptions := Seq("-Xfatal-warnings"),
       libraryDependencies ++= Seq(
         "org.typelevel" %% "cats-core" % catsVersion,
         "org.typelevel" %% "cats-free" % catsVersion,
@@ -58,7 +57,7 @@ lazy val frontend =
     .enablePlugins(ScalaJSPlugin, GitVersioning)
     .settings(
       commonSettings,
-      scalacOptions := "-Xfatal-warnings",
+      scalacOptions := Seq("-Xfatal-warnings"),
       scalaJSUseMainModuleInitializer := true,
       libraryDependencies ++= Seq(
         "io.github.buntec" %%% "ff4s" % ff4sVersion,
