@@ -12,6 +12,9 @@ trait KvStore[F[_], K, V] {
   /** get a value based on a key from store */
   def get(key: K): F[V]
 
+  /** remove a key value pair from the store */
+  def remove(key: K): F[Unit]
+
   /** list of all key-value pairs */
   def entries: F[List[(K, V)]]
 
@@ -23,6 +26,7 @@ object KvStore {
 
   class KvStoreMissingKeyException(msg: String) extends RuntimeException(msg)
 
+  /** implementation based on a local `Map` */
   def make[F[_], K, V](implicit
       F: Concurrent[F]
   ): Resource[F, KvStore[F, K, V]] =
@@ -44,6 +48,9 @@ object KvStore {
               )
             )
           }
+
+      override def remove(key: K): F[Unit] =
+        store.update(_.removed(key))
 
       override def entries: F[List[(K, V)]] = store.get.map(_.toList)
 
