@@ -6,7 +6,7 @@ import cats.implicits._
 
 trait KvStore[F[_], K, V] {
 
-  /** inserts the store with the given key value pair. if key already exists,
+  /** insert the given key value pair in the store. if key already exists,
     * the new value will overwrite the old one.
     */
   def insert(key: K, value: V): F[Unit]

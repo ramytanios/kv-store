@@ -1,28 +1,34 @@
 package kvstore
 
-import cats.effect.IOApp
-import cats.effect.{ExitCode, IO}
-import org.http4s.server.Router
+import cats.effect._
 import cats.syntax.semigroupk._
 import org.http4s.ember.server._
 import com.comcast.ip4s._
-import org.http4s.HttpRoutes
-import cats.effect.Async
-import cats.data.Kleisli
-import org.http4s.{Request, Response}
+import org.http4s._
+import Routes._
+import org.http4s.server._
 
 object Service extends IOApp {
 
-  override def run(args: List[String]): IO[ExitCode] = {
+  def serviceR[F[_]: Async]: Resource[F, Server] = for {
 
-    EmberServerBuilder
-      .default[IO]
+    kvStore <- KvStore.make[F, String, String](5)
+
+    routes = new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
+      kvStore
+    ).routes
+
+    httpApp = routes.orNotFound
+
+    server <- EmberServerBuilder
+      .default[F]
       .withHost(ipv4"0.0.0.0")
       .withPort(port"8090")
+      .withHttpApp(httpApp)
       .build
-      .use(_ => IO.never)
-      .as(ExitCode.Success)
 
-  }
+  } yield server
 
+  override def run(args: List[String]): IO[ExitCode] =
+    serviceR[IO].use(_ => IO.never).as(ExitCode.Success)
 }

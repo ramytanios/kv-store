@@ -1,12 +1,10 @@
 package kvstore
 
 import org.http4s.dsl.Http4sDsl
-import org.http4s.HttpRoutes
+import org.http4s._
 import org.http4s.server.Router
 import cats._
-import org.http4s.EntityEncoder
 import org.http4s.circe._
-import org.http4s.EntityDecoder
 import io.circe._
 import io.circe.generic.semiauto._
 import cats.effect._
@@ -45,14 +43,17 @@ object Routes {
       jsonOf[F, KeyValue]
 
     private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
+      // get all entries of the store
       case GET -> Root =>
         Ok(store.entries.map(_.map { case (key, value) =>
           KeyValue(key, value)
         }))
+
+      // insert a key value pair in the store
       case req @ POST -> Root =>
         for {
           keyValue <- req.as[KeyValue]
-          _ <- store.put(keyValue.key, keyValue.value)
+          _ <- store.insert(keyValue.key, keyValue.value)
           response <- Ok()
         } yield response
     }
