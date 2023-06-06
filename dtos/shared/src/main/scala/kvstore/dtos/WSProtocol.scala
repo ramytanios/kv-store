@@ -12,6 +12,7 @@ object WSProtocol {
   sealed trait Server extends WSProtocol
   object Server {
     case object Pong extends Server
+    case class KeyValueEntries(kvs: List[(String, String)]) extends Server
   }
 
 }

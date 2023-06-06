@@ -20,6 +20,9 @@ trait KvStore[F[_], K, V] {
   /** list of all key-value pairs */
   def entries: F[List[(K, V)]]
 
+  /** clear the store */
+  def clear: F[Unit]
+
   /** number of keys */
   def size: F[Int]
 }
@@ -64,6 +67,8 @@ object KvStore {
         storeR.update(_.removed(key)) 
 
       override def entries: F[List[(K, V)]] = storeR.get.map(_.toList)
+      
+      override def clear: F[Unit] = storeR.set(Map.empty[K, V])
 
       override def size: F[Int] = storeR.get.map(_.size)
 
