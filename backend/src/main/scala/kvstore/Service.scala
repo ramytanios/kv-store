@@ -1,34 +1,60 @@
 package kvstore
 
 import cats.effect._
+import cats.effect.implicits._
 import cats.syntax.semigroupk._
 import org.http4s.ember.server._
 import com.comcast.ip4s._
-import org.http4s._
-import Routes._
 import org.http4s.server._
+import fs2.io.net.Network
+import scala.concurrent.duration._
+import Http._
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 object Service extends IOApp {
 
-  def serviceR[F[_]: Async]: Resource[F, Server] = for {
+  def serviceR[F[_]: Network](implicit F: Async[F]): Resource[F, Server] = for {
+
+    logger <- Slf4jLogger.create[F].toResource
 
     kvStore <- KvStore.make[F, String, String](5)
 
-    routes = new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
-      kvStore
-    ).routes
+    httpRoutes = Router(
+      "api" -> (new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
+        kvStore
+      ).routes)
+    )
 
-    httpApp = routes.orNotFound
+    host <- Resource.eval {
+      F.fromOption(
+        Host.fromString("0.0.0.0"),
+        new IllegalArgumentException("Invalid host")
+      )
+    }
+
+    port <- Resource.eval {
+      F.fromOption(
+        Port.fromInt(8090),
+        new IllegalArgumentException("Invalid port")
+      )
+    }
+
+    _ <- logger.info(s"Server running on $host:$port").toResource
 
     server <- EmberServerBuilder
       .default[F]
-      .withHost(ipv4"0.0.0.0")
-      .withPort(port"8090")
-      .withHttpApp(httpApp)
+      .withHost(host)
+      .withPort(port)
+      .withHttpWebSocketApp(_ => httpRoutes.orNotFound)
+      .withMaxConnections(32)
+      .withIdleTimeout(10.seconds)
       .build
 
   } yield server
 
+  def useServer[F[_]: Network](implicit F: Async[F]): F[Unit] =
+    serviceR.use(_ => F.never)
+
   override def run(args: List[String]): IO[ExitCode] =
-    serviceR[IO].use(_ => IO.never).as(ExitCode.Success)
+    useServer[IO].as(ExitCode.Success)
 }

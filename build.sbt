@@ -1,5 +1,5 @@
 lazy val scala213 = "2.13.10"
-Global / semanticdbEnabled := true 
+Global / semanticdbEnabled := true
 Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / scalaVersion := scala213
 ThisBuild / organization := "io.github.ramytanios"
@@ -26,13 +26,25 @@ lazy val root = project
   .aggregate(backend, frontend)
   .settings(crossScalaVersions := Nil)
 
+lazy val dtos = crossProject(JSPlatform, JVMPlatform)
+  .in(file("dtos"))
+  .enablePlugins(GitVersioning)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= Seq(
+      "io.circe" %%% "circe-generic" % circeVersion,
+      "io.circe" %%% "circe-literal" % circeVersion,
+      "io.circe" %%% "circe-parser" % circeVersion
+    )
+  )
+
 lazy val backend =
   project
     .in(file("backend"))
     .enablePlugins(GitVersioning)
     .settings(
       commonSettings,
-      scalacOptions := Seq("-Xfatal-warnings"),
+      scalacOptions -= "-Xfatal-warnings",
       libraryDependencies ++= Seq(
         "org.typelevel" %% "cats-core" % catsVersion,
         "org.typelevel" %% "cats-free" % catsVersion,
@@ -50,6 +62,7 @@ lazy val backend =
         "io.circe" %% "circe-parser" % circeVersion
       )
     )
+    .dependsOn(dtos.jvm)
 
 lazy val frontend =
   project
@@ -57,7 +70,7 @@ lazy val frontend =
     .enablePlugins(ScalaJSPlugin, GitVersioning)
     .settings(
       commonSettings,
-      scalacOptions := Seq("-Xfatal-warnings"),
+      scalacOptions -= "-Xfatal-warnings",
       scalaJSUseMainModuleInitializer := true,
       libraryDependencies ++= Seq(
         "io.github.buntec" %%% "ff4s" % ff4sVersion,
@@ -68,3 +81,4 @@ lazy val frontend =
         "dev.optics" %%% "monocle-macro" % monocleVersion
       )
     )
+    .dependsOn(dtos.js)

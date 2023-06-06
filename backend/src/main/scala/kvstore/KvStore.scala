@@ -38,12 +38,11 @@ object KvStore {
   ): Resource[F, KvStore[F, K, V]] =
     for {
       storeR <- F.ref(Map.empty[K, V]).toResource
-      sizeR <- F.ref(0).toResource
     } yield new KvStore[F, K, V] {
 
       override def insert(key: K, value: V): F[Unit] =
-        F.ifF(sizeR.get.map(_ < maxSize))(
-          storeR.update(_.updated(key, value)) *> sizeR.update(_ + 1),
+        F.ifM(storeR.get.map(_.size < maxSize))(
+          storeR.update(_.updated(key, value)),
           F.raiseError(
             new KvStoreMaxSizeReachedException(s"Max size $maxSize reached.")
           )
@@ -62,11 +61,11 @@ object KvStore {
           }
 
       override def remove(key: K): F[Unit] =
-        storeR.update(_.removed(key)) *> sizeR.update(_ - 1)
+        storeR.update(_.removed(key)) 
 
       override def entries: F[List[(K, V)]] = storeR.get.map(_.toList)
 
-      override def size: F[Int] = sizeR.get
+      override def size: F[Int] = storeR.get.map(_.size)
 
     }
 
