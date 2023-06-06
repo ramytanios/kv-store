@@ -45,7 +45,9 @@ object Service extends IOApp {
       .default[F]
       .withHost(host)
       .withPort(port)
-      .withHttpWebSocketApp(_ => httpRoutes.orNotFound)
+      .withHttpWebSocketApp(ws =>
+        (new Websocket(ws, kvStore).routes <+> httpRoutes).orNotFound
+      )
       .withMaxConnections(32)
       .withIdleTimeout(10.seconds)
       .build
