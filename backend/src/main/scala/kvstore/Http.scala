@@ -45,6 +45,13 @@ object Http {
         } yield response
         responseF.handleErrorWith(error => BadRequest(error.getMessage))
 
+      // delete a specific kv pair
+      case DELETE -> Root / key =>
+        store
+          .remove(key)
+          .flatMap(_ => Ok())
+          .handleErrorWith(error => BadRequest(error.getMessage))
+
     }
 
     val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)
