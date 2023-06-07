@@ -1,14 +1,15 @@
 package kvstore
 
-import cats.syntax.all._
 import cats.effect.Async
-import org.http4s.server.websocket.WebSocketBuilder2
+import cats.syntax.all._
+import io.circe.syntax._
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
-import org.http4s.websocket.WebSocketFrame
-import scala.concurrent.duration._
-import io.circe.syntax._
 import org.http4s.server.Router
+import org.http4s.server.websocket.WebSocketBuilder2
+import org.http4s.websocket.WebSocketFrame
+
+import scala.concurrent.duration._
 
 class Websocket[F[_]](
     ws: WebSocketBuilder2[F],

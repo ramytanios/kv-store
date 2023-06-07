@@ -6,8 +6,8 @@ import cats.implicits._
 
 trait KvStore[F[_], K, V] {
 
-  /** insert the given key value pair in the store. if key already exists,
-    * the new value will overwrite the old one.
+  /** insert the given key value pair in the store. if key already exists, the
+    * new value will overwrite the old one.
     */
   def insert(key: K, value: V): F[Unit]
 
@@ -64,10 +64,10 @@ object KvStore {
           }
 
       override def remove(key: K): F[Unit] =
-        storeR.update(_.removed(key)) 
+        storeR.update(_.removed(key))
 
       override def entries: F[List[(K, V)]] = storeR.get.map(_.toList)
-      
+
       override def clear: F[Unit] = storeR.set(Map.empty[K, V])
 
       override def size: F[Int] = storeR.get.map(_.size)

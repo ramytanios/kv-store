@@ -1,14 +1,13 @@
 package kvstore
 
-import org.http4s.dsl.Http4sDsl
-import org.http4s._
-import org.http4s.server.Router
 import cats._
-// gives for free EntityDecoder and EntityEncoder for Codecs
-import org.http4s.circe.CirceEntityCodec._
 import cats.effect._
 import cats.implicits._
 import kvstore.dtos.Dtos._
+import org.http4s._
+import org.http4s.circe.CirceEntityCodec._
+import org.http4s.dsl.Http4sDsl
+import org.http4s.server.Router
 
 object Http {
 
