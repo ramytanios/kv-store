@@ -30,6 +30,7 @@ class Websocket[F[_]](
           }
         }
 
+    // pong logic
     val receive: fs2.Pipe[F, WebSocketFrame, Unit] = _.evalMap(_ => F.unit)
 
     ws.build(send, receive)
