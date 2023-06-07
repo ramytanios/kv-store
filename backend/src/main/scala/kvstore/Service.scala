@@ -2,7 +2,7 @@ package kvstore
 
 import cats.effect._
 import cats.effect.implicits._
-import cats.syntax.semigroupk._
+import cats.implicits._
 import com.comcast.ip4s._
 import fs2.io.net.Network
 import org.http4s.ember.server._
@@ -12,6 +12,8 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scala.concurrent.duration._
 
 import Http._
+import cats.effect.std.Queue
+import kvstore.dtos.WSProtocol
 
 object Service extends IOApp {
 
@@ -43,16 +45,29 @@ object Service extends IOApp {
 
     _ <- logger.info(s"Server running on $host:$port").toResource
 
+    outMessages <- Queue.unbounded[F, WSProtocol.Server].toResource
+
     server <- EmberServerBuilder
       .default[F]
       .withHost(host)
       .withPort(port)
       .withHttpWebSocketApp(ws =>
-        (new Websocket(ws, kvStore).routes <+> httpRoutes).orNotFound
+        (new Websocket(ws, outMessages).routes <+> httpRoutes).orNotFound
       )
       .withMaxConnections(32)
       .withIdleTimeout(10.seconds)
       .build
+
+    _ <- fs2.Stream
+      .fixedDelay(1.seconds)
+      .evalMap { _ =>
+        kvStore.entries.map { entries =>
+          outMessages.offer(WSProtocol.Server.KeyValueEntries(entries))
+        }
+      }
+      .compile
+      .drain
+      .background
 
   } yield server
 
