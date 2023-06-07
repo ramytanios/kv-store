@@ -52,6 +52,12 @@ object Http {
           .flatMap(_ => Ok())
           .handleErrorWith(error => BadRequest(error.getMessage))
 
+      // clear the store
+      case DELETE -> Root =>
+        store.clear
+          .flatMap(_ => Ok())
+          .handleErrorWith(error => BadRequest(error.getMessage))
+
     }
 
     val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)
