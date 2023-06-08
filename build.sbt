@@ -7,12 +7,12 @@ ThisBuild / organizationName := "ramytanios"
 ThisBuild / startYear := Some(2023)
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
-lazy val ff4sVersion = "0.16.0"
+lazy val ff4sVersion = "0.17.0"
 lazy val circeVersion = "0.14.5"
 lazy val monocleVersion = "3.2.0"
 lazy val catsVersion = "2.9.0"
-lazy val catsEffectVersion = "3.4.8"
-lazy val fs2Version = "3.6.1"
+lazy val catsEffectVersion = "3.5.0"
+lazy val fs2Version = "3.7.0"
 lazy val log4CatsVersion = "2.5.0"
 lazy val http4sVersion = "0.23.19"
 
