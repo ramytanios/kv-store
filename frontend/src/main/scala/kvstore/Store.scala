@@ -63,7 +63,10 @@ object Store {
         .bidirectionalJson[WSProtocol.Server, WSProtocol.Client](
           "ws://localhost:8090/ws",
           _.evalMap {
-            case WSProtocol.Server.Pong => console.println("Pong received")
+            case WSProtocol.Server.Pong =>
+              console.println("Pong received") *> store.dispatch(
+                Action.SetWsOpen(true)
+              )
             case WSProtocol.Server.KeyValueEntries(entries) =>
               store.dispatch(Action.SetKvEntries(entries))
           },
