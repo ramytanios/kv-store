@@ -14,7 +14,8 @@ import org.http4s.websocket.WebSocketFrame
 
 case class Websocket[F[_]](
     ws: WebSocketBuilder2[F],
-    sendQueue: Queue[F, WSProtocol.Server]
+    sendQueue: Queue[F, WSProtocol.Server],
+    receivePipe: fs2.Stream[F, WSProtocol.Client] => fs2.Stream[F, Unit]
 )(implicit F: Async[F])
     extends Http4sDsl[F] {
 
@@ -27,14 +28,13 @@ case class Websocket[F[_]](
         .map(message => WebSocketFrame.Text(message.asJson.noSpaces))
 
     val receive: fs2.Pipe[F, WebSocketFrame, Unit] =
-      _.evalMap {
-        case WebSocketFrame.Text(msgFrame, _) =>
-          decode[WSProtocol.Client](msgFrame).toOption
-            .foldMapM { case WSProtocol.Client.Ping =>
-              sendQueue.offer(WSProtocol.Server.Pong)
-            }
-        case _ => F.unit
-      }
+      inStream =>
+        inStream
+          .collect { case WebSocketFrame.Text(msgFrame, _) =>
+            decode[WSProtocol.Client](msgFrame).toOption
+          }
+          .unNone
+          .through(receivePipe)
 
     ws.build(send, receive)
   }

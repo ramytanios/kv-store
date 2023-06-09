@@ -51,11 +51,9 @@ object Store {
 
       _ <- fs2.Stream
         .fixedDelay(5.seconds)
-        .map { _ =>
-          outMessages.offer(WSProtocol.Client.Ping)
-        }
+        .evalMap { _ => outMessages.offer(WSProtocol.Client.Ping) }
         .compile
-        .drain
+        .drainevalMap
         .background
 
       _ <- ff4s

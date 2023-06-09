@@ -64,12 +64,21 @@ object Service {
       .drain
       .background
 
+    receivePipe = (inStream: fs2.Stream[F, WSProtocol.Client]) =>
+      inStream.evalMap { case WSProtocol.Client.Ping =>
+        outMessages.offer(WSProtocol.Server.Pong)
+      }
+
     server <- EmberServerBuilder
       .default[F]
       .withHost(host)
       .withPort(port)
       .withHttpWebSocketApp(ws =>
-        (new Websocket(ws, outMessages).routes <+> httpRoutes).orNotFound
+        (new Websocket(
+          ws,
+          outMessages,
+          receivePipe
+        ).routes <+> httpRoutes).orNotFound
       )
       .withMaxConnections(32)
       .withIdleTimeout(10.seconds)
