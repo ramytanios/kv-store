@@ -1,8 +1,6 @@
 # Key value store
 
-A key-value store full stack application.
-
-The application is based on the following libraries:
+A key-value store full stack application based on the following libraries:
 
 - [fs2](https://fs2.io/)
 - [http4s](https://http4s.org/)
