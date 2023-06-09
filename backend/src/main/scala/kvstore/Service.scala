@@ -2,9 +2,11 @@ package kvstore
 
 import cats.effect._
 import cats.effect.implicits._
+import cats.effect.std.Queue
 import cats.implicits._
 import com.comcast.ip4s._
 import fs2.io.net.Network
+import kvstore.dtos.WSProtocol
 import org.http4s.ember.server._
 import org.http4s.server._
 import org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -12,8 +14,6 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scala.concurrent.duration._
 
 import Http._
-import cats.effect.std.Queue
-import kvstore.dtos.WSProtocol
 
 object Service extends IOApp {
 

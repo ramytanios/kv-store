@@ -41,7 +41,7 @@ lazy val dtos = crossProject(JSPlatform, JVMPlatform)
 lazy val backend =
   project
     .in(file("backend"))
-    .enablePlugins(GitVersioning)
+    .enablePlugins(GitVersioning, JavaAppPackaging)
     .settings(
       commonSettings,
       scalacOptions -= "-Xfatal-warnings",

@@ -7,7 +7,7 @@ object View {
     import dsl.html._
 
     useState { state =>
-      div("Hello world")
+      div(state.kvEntries.mkString("/"))
     }
 
   }

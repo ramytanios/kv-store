@@ -1,14 +1,14 @@
 package kvstore
 
+import cats.effect.Async
+import cats.syntax.all._
 import io.circe.Decoder
 import io.circe.Encoder
-import cats.syntax.all._
-import cats.effect.Async
-import org.http4s.dom.FetchClientBuilder
+import org.http4s.Method
 import org.http4s.Uri
 import org.http4s.circe.CirceEntityCodec._
-import org.http4s.Method
 import org.http4s.client.dsl.Http4sClientDsl
+import org.http4s.dom.FetchClientBuilder
 
 trait HttpClient[F[_]] {
 

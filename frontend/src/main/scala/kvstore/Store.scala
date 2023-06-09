@@ -1,18 +1,19 @@
 package kvstore
 
 import cats.effect._
+import cats.effect.implicits._
+import cats.effect.std.Queue
 import cats.syntax.all._
 import kvstore.dtos.Dtos._
 import kvstore.dtos.WSProtocol
-import cats.effect.implicits._
+
 import scala.concurrent.duration._
-import cats.effect.std.Queue
 
 object Store {
 
   def apply[F[_]](implicit
       F: Async[F],
-      C: std.Console[F]
+      console: std.Console[F]
   ): Resource[F, ff4s.Store[F, State, Action]] = {
 
     val httpClient = HttpClient[F]
@@ -62,7 +63,7 @@ object Store {
         .bidirectionalJson[WSProtocol.Server, WSProtocol.Client](
           "ws://localhost:8090/ws",
           _.evalMap {
-            case WSProtocol.Server.Pong => C.println("Pong received")
+            case WSProtocol.Server.Pong => console.println("Pong received")
             case WSProtocol.Server.KeyValueEntries(entries) =>
               store.dispatch(Action.SetKvEntries(entries))
           },
