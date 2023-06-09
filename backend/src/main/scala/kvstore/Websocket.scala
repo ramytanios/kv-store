@@ -1,7 +1,9 @@
 package kvstore
 
 import cats.effect.Async
+import cats.implicits._
 import io.circe.syntax._
+import io.circe.parser._
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
@@ -10,7 +12,7 @@ import org.http4s.websocket.WebSocketFrame
 import cats.effect.std.Queue
 import kvstore.dtos.WSProtocol
 
-class Websocket[F[_]](
+case class Websocket[F[_]](
     ws: WebSocketBuilder2[F],
     sendQueue: Queue[F, WSProtocol.Server]
 )(implicit F: Async[F])
@@ -25,7 +27,12 @@ class Websocket[F[_]](
         .map(message => WebSocketFrame.Text(message.asJson.noSpaces))
 
     val receive: fs2.Pipe[F, WebSocketFrame, Unit] =
-      _.evalMap(_ => F.unit)
+      _.evalMap { msgFrame =>
+        decode[WSProtocol.Client](msgFrame.toString).toOption
+          .foldMapM { case WSProtocol.Client.Ping =>
+            sendQueue.offer(WSProtocol.Server.Pong)
+          }
+      }
 
     ws.build(send, receive)
   }

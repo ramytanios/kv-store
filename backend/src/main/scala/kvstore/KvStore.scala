@@ -3,6 +3,7 @@ package kvstore
 import cats.effect._
 import cats.effect.implicits._
 import cats.implicits._
+import fs2.concurrent._
 
 trait KvStore[F[_], K, V] {
 
@@ -24,7 +25,7 @@ trait KvStore[F[_], K, V] {
   def clear: F[Unit]
 
   /** number of keys */
-  def size: F[Int]
+  def size: Signal[F, Int]
 }
 
 object KvStore {
@@ -40,7 +41,7 @@ object KvStore {
       F: Concurrent[F]
   ): Resource[F, KvStore[F, K, V]] =
     for {
-      storeR <- F.ref(Map.empty[K, V]).toResource
+      storeR <- fs2.concurrent.SignallingRef(Map.empty[K, V]).toResource
     } yield new KvStore[F, K, V] {
 
       override def insert(key: K, value: V): F[Unit] =
@@ -70,7 +71,7 @@ object KvStore {
 
       override def clear: F[Unit] = storeR.set(Map.empty[K, V])
 
-      override def size: F[Int] = storeR.get.map(_.size)
+      override def size: Signal[F, Int] = storeR.map(_.size)
 
     }
 

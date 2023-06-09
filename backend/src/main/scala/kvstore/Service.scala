@@ -43,9 +43,26 @@ object Service extends IOApp {
       )
     }
 
-    _ <- logger.info(s"Server running on $host:$port").toResource
+    _ <- logger
+      .info(s"Server running on $host:$port")
+      .toResource // does not work
+
+    _ <- F.delay {
+      println(s"Server running on $host:$port")
+    }.toResource // works
 
     outMessages <- Queue.unbounded[F, WSProtocol.Server].toResource
+
+    // watch changes in store size
+    _ <- kvStore.size.discrete.changes
+      .evalMap { _ =>
+        kvStore.entries.flatMap { entries =>
+          outMessages.offer(WSProtocol.Server.KeyValueEntries(entries))
+        }
+      }
+      .compile
+      .drain
+      .background
 
     server <- EmberServerBuilder
       .default[F]
@@ -57,17 +74,6 @@ object Service extends IOApp {
       .withMaxConnections(32)
       .withIdleTimeout(10.seconds)
       .build
-
-    _ <- fs2.Stream
-      .fixedDelay(1.seconds)
-      .evalMap { _ =>
-        kvStore.entries.map { entries =>
-          outMessages.offer(WSProtocol.Server.KeyValueEntries(entries))
-        }
-      }
-      .compile
-      .drain
-      .background
 
   } yield server
 

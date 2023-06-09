@@ -60,7 +60,7 @@ object Store {
       _ <- ff4s
         .WebSocketClient[F]
         .bidirectionalJson[WSProtocol.Server, WSProtocol.Client](
-          backendUrl,
+          "ws://localhost:8090/ws",
           _.evalMap {
             case WSProtocol.Server.Pong => C.println("Pong received")
             case WSProtocol.Server.KeyValueEntries(entries) =>
