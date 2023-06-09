@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 
 import Http._
 
-object Service extends IOApp {
+object Service {
 
   def serviceR[F[_]: Network](implicit F: Async[F]): Resource[F, Server] = for {
 
@@ -77,9 +77,4 @@ object Service extends IOApp {
 
   } yield server
 
-  def useServer[F[_]: Network](implicit F: Async[F]): F[Unit] =
-    serviceR.use(_ => F.never)
-
-  override def run(args: List[String]): IO[ExitCode] =
-    useServer[IO].as(ExitCode.Success)
 }
