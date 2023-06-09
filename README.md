@@ -9,3 +9,9 @@ The application is based on the following libraries:
 - [fs2](https://fs2.io/)
 - [http4s](https://http4s.org/)
 - [ff4s](https://github.com/buntec/ff4s)
+
+Start the application using the following commands:
+
+1. `sbt backend/run` for the backend.
+2. `sbt frontend/fastLinkJS` and serve the `index.html` by running
+   the script `frontend/start-dev-server.sh` for the frontend. ([Live server](https://www.npmjs.com/package/live-server))
