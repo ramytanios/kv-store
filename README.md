@@ -13,5 +13,6 @@ The application is based on the following libraries:
 Start the application using the following commands:
 
 1. `sbt backend/run` for the backend.
-2. `sbt frontend/fastLinkJS` and serve the `index.html` by running
-   the script `frontend/start-dev-server.sh` for the frontend. ([Live server](https://www.npmjs.com/package/live-server))
+2. `sbt frontend/fastLinkJS` and serve the `frontend/index.html` with the tool of your choice.
+   For example, [Live server](https://www.npmjs.com/package/live-server) can be used by executing
+   the shell script `frontend/start-dev-server.sh`.
