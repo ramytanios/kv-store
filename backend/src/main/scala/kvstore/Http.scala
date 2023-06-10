@@ -33,30 +33,28 @@ object Http {
       case GET -> Root =>
         Ok(store.entries.map(_.map { case (key, value) =>
           KeyValue(key, value)
-        })).handleErrorWith(error => BadRequest(error.getMessage))
+        }))
 
       // insert a key value pair in the store
       case req @ POST -> Root =>
-        val responseF = for {
+        // val responseF =
+        for {
           keyValue <- req.as[KeyValue]
           _ <- store.insert(keyValue.key, keyValue.value)
           response <- Ok()
         } yield response
-        responseF.handleErrorWith(error => BadRequest(error.getMessage))
 
       // delete a specific kv pair
       case DELETE -> Root / key =>
         store
           .remove(key)
           .flatMap(_ => Ok())
-          .handleErrorWith(error => BadRequest(error.getMessage))
 
       // clear the store
       case DELETE -> Root =>
         store.clear
           .flatMap(_ => Ok())
           .handleErrorWith(error => BadRequest(error.getMessage))
-
     }
 
     val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)
