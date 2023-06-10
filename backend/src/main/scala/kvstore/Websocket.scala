@@ -2,7 +2,6 @@ package kvstore
 
 import cats.effect.Async
 import cats.effect.std.Queue
-import cats.implicits._
 import io.circe.parser._
 import io.circe.syntax._
 import kvstore.dtos.WSProtocol

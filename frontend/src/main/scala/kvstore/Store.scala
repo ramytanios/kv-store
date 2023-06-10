@@ -8,6 +8,7 @@ import kvstore.dtos.Dtos._
 import kvstore.dtos.WSProtocol
 
 import scala.concurrent.duration._
+import java.{util => ju}
 
 object Store {
 
@@ -36,10 +37,17 @@ object Store {
           case Action.SetKvEntries(entries) =>
             _.copy(kvEntries = entries) -> none
 
-          case Action.InsertKeyValue(key, value) =>
-            _ -> httpClient
-              .post[KeyValue, Unit](backendUrl, KeyValue(key, value))
-              .some
+          case Action.InsertKeyValue =>
+            state =>
+              state -> (for {
+                key <- F.fromOption(state.key, new ju.NoSuchElementException)
+                value <- F.fromOption(
+                  state.value,
+                  new ju.NoSuchElementException
+                )
+                _ <- httpClient
+                  .post[KeyValue, Unit](backendUrl, KeyValue(key, value))
+              } yield ()).handleErrorWith(error => console.print(error.getMessage)).some
 
           case Action.ClearStore =>
             _ -> httpClient.delete(backendUrl).some
@@ -53,7 +61,7 @@ object Store {
         .fixedDelay(5.seconds)
         .evalMap { _ => outMessages.offer(WSProtocol.Client.Ping) }
         .compile
-        .drainevalMap
+        .drain
         .background
 
       _ <- ff4s

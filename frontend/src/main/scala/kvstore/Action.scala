@@ -14,7 +14,7 @@ object Action {
 
   case class SetKvEntries(kvs: List[(String, String)]) extends Action
 
-  case class InsertKeyValue(key: String, value: String) extends Action
+  case object InsertKeyValue extends Action
 
   case class RemoveKeyValue(key: String) extends Action
 
