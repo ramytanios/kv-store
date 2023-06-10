@@ -26,7 +26,6 @@ object Store {
 
       store <- ff4s.Store[F, State, Action](State.default) { _ =>
         _ match {
-          case Action.SetAlive(alive) => _.copy(alive = alive) -> none
 
           case Action.SetWsOpen(wsOpen) => _.copy(wsOpen = wsOpen) -> none
 
@@ -47,7 +46,9 @@ object Store {
                 )
                 _ <- httpClient
                   .post[KeyValue, Unit](backendUrl, KeyValue(key, value))
-              } yield ()).handleErrorWith(error => console.print(error.getMessage)).some
+              } yield ())
+                .handleErrorWith(error => console.print(error.getMessage))
+                .some
 
           case Action.ClearStore =>
             _ -> httpClient.delete(backendUrl).some
