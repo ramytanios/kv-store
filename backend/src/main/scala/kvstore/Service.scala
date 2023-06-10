@@ -9,6 +9,7 @@ import kvstore.dtos.WSProtocol
 import org.http4s.ember.server._
 import org.http4s.server._
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import org.http4s.server.middleware
 
 import scala.concurrent.duration._
 import Http._
@@ -17,7 +18,9 @@ import fs2.io.net.Network
 
 object Service {
 
-  def serviceR[F[_]: Network](implicit F: Async[F]): Resource[F, Server] = {
+  def serviceR[F[_]: Network: std.Console](implicit
+      F: Async[F]
+  ): Resource[F, Server] = {
 
     val dsl = Http4sDsl[F]
     import dsl._
@@ -28,10 +31,17 @@ object Service {
 
       kvStore <- KvStore.make[F, String, String](5)
 
-      httpRoutes = Router(
-        "api" -> (new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
-          kvStore
-        ).routes)
+      httpRoutesWithLoggerMiddleware = middleware.Logger.httpRoutes[F](
+        logHeaders = false,
+        logBody = true,
+        redactHeadersWhen = _ => false,
+        logAction = ((msg: String) => std.Console[F].println(msg)).some
+      )(
+        Router(
+          "api" -> (new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
+            kvStore
+          ).routes)
+        )
       )
 
       host <- Resource.eval {
@@ -75,7 +85,7 @@ object Service {
             ws,
             outMessages,
             receivePipe
-          ).routes <+> httpRoutes).orNotFound
+          ).routes <+> httpRoutesWithLoggerMiddleware).orNotFound
         )
         .withMaxConnections(32)
         .withIdleTimeout(10.seconds)
