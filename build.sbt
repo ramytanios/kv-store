@@ -13,7 +13,7 @@ lazy val monocleVersion = "3.2.0"
 lazy val catsVersion = "2.9.0"
 lazy val catsEffectVersion = "3.5.0"
 lazy val fs2Version = "3.7.0"
-lazy val log4CatsVersion = "2.5.0"
+lazy val log4CatsVersion = "2.6.0"
 lazy val http4sVersion = "0.23.19"
 
 lazy val commonSettings = Seq(
