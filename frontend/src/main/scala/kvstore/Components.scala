@@ -1,6 +1,8 @@
 package kvstore
 
 import org.scalajs.dom
+import cats.kernel.Eq
+import cats.syntax.all._
 
 class Components[F[_], S, A] {
 
@@ -15,7 +17,8 @@ class Components[F[_], S, A] {
 
     useState { state =>
       button(
-        cls := "uppercase border rounded bg-green-500",
+        cls := "border border-black rounded px-2 py-1 hover:bg-zinc-300 transition active:scale-90 disabled:opacity-50 disabled:pointer-events-none",
+        styleAttr := "text-transform: inherit",
         label0,
         disabled := isDisabled(state),
         onClick := (_ => onClick0(state))
@@ -25,7 +28,7 @@ class Components[F[_], S, A] {
 
   // custom text
   def customText(
-      input0: String,
+      input0: Option[String],
       placeholder0: String,
       onInput0: (S, String) => Option[A]
   )(implicit
@@ -36,17 +39,55 @@ class Components[F[_], S, A] {
 
     useState { state =>
       textArea(
-        cls := "border rounded",
+        cls := "rounded-md border outline-none w-full h-full overall-y-scroll",
         placeholder := placeholder0,
+        styleAttr := "resize: none",
         onInput := ((ev: dom.Event) =>
           ev.target match {
             case el: dom.HTMLTextAreaElement => onInput0(state, el.value)
-            case _                         => None
+            case _                           => None
           }
         ),
-        input0
+        value := input0.getOrElse("")
       )
     }
+  }
+
+  // custom table
+  def customTable[RowKey: Eq](
+      colNames: List[String],
+      tableRows: List[(RowKey, List[String])],
+      onRowClick: RowKey => Option[A],
+      selectedRow: Option[RowKey]
+  )(implicit dsl: ff4s.Dsl[F, S, A]): dsl.V = {
+
+    import dsl._
+    import dsl.html._
+
+    val headerCls = "px-2 sticky text-center top-0 z-20 bg-green-500"
+    val cellCls = "cursor-pointer px-2 text-center"
+    val colsCls = s"grid-cols-${colNames.size}"
+
+    div(
+      cls := s"grid w-full h-full overflow-y-scroll auto-rows-min $colsCls rounded border",
+      // table header
+      colNames.map(name => div(cls := headerCls, name)),
+      // table body
+      tableRows.map { case (key, row) =>
+        div(
+          cls := "contents group/row",
+          row.map(entry =>
+            div(
+              cls := cellCls ++ s" ${if (selectedRow.exists(_ === key)) "bg-active group-hover/row:bg-active-border"
+                else "group-hover/row:bg-row-hover"}",
+              onClick := (_ => onRowClick(key)),
+              entry
+            )
+          )
+        )
+      }
+    )
+
   }
 
 }

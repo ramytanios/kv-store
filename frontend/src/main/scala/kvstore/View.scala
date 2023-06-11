@@ -13,19 +13,40 @@ object View {
 
     useState { state =>
       div(
-        cls := "bg-zinc-500 h-screen w-full",
-        customBtn("Insert", _ => Action.InsertKeyValue.some, _ => false),
-        customText(
-          state.key.getOrElse(""),
-          "key",
-          (_, textStr) => Action.SetKey(textStr.some).some
+        cls := "flex flex-col h-screen overflow-hidden bg-zinc-200 h-screen font-mono uppercase",
+        headerTag(
+          cls := "w-full text-center border-b p-4 bg-zinc-500 text-xl",
+          "key value store"
         ),
-        customText(
-          state.value.getOrElse(""),
-          "value",
-          (_, textStr) => Action.SetValue(textStr.some).some
+        mainTag(
+          cls := "flex-1 overflow-y-scroll p-2",
+          customBtn("Insert", _ => Action.InsertKeyValue.some, _ => false),
+          div(
+            cls := "flex",
+            customText(
+              state.key,
+              "i.e: Foo",
+              (_, textStr) => Action.SetKey(textStr.some).some
+            ),
+            customText(
+              state.value,
+              "i.e: {'name': 'bar' 'age': 20 }",
+              (_, textStr) => Action.SetValue(textStr.some).some
+            )
+          ),
+          customTable[String](
+            List("Key", "Value"),
+            state.kvEntries.map { case pair =>
+              (pair._1, List(pair._1, pair._2))
+            },
+            _ => None,
+            None
+          ),
         ),
-        div(state.kvEntries.mkString("||"))
+        footerTag(
+          cls := "w-full text-center border-t p-4 bg-zinc-500 text-xl",
+          "typelevel based"
+        )
       )
     }
 
