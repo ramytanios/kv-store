@@ -29,7 +29,7 @@ object Service {
 
       logger <- Slf4jLogger.create[F].toResource
 
-      kvStore <- KvStore.make[F, String, String](5)
+      kvStore <- KvStore.make[F, String, String](1000)
 
       httpRoutesWithLoggerMiddleware = middleware.Logger.httpRoutes[F](
         logHeaders = false,
@@ -89,8 +89,8 @@ object Service {
         )
         .withMaxConnections(32)
         .withIdleTimeout(10.seconds)
-        .withLogger(logger)
-        .withErrorHandler(error => BadRequest(error.getMessage))
+        .withLogger(logger) // use ?
+        .withErrorHandler(error => BadRequest(error.getMessage)) // improve ?
         .build
         .evalTap { _ => logger.info(s"Server listennig on $host:$port") }
 

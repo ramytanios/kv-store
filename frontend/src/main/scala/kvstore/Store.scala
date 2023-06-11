@@ -19,7 +19,7 @@ object Store {
 
     val httpClient = HttpClient[F]
 
-    val backendUrl = "localhost:8090/api/kv"
+    val backendUrl = "http://127.0.0.1:8090/api/kv"
 
     for {
       outMessages <- Queue.unbounded[F, WSProtocol.Client].toResource
@@ -68,7 +68,7 @@ object Store {
       _ <- ff4s
         .WebSocketClient[F]
         .bidirectionalJson[WSProtocol.Server, WSProtocol.Client](
-          "ws://localhost:8090/ws",
+          "ws://127.0.0.1:8090/ws",
           _.evalMap {
             case WSProtocol.Server.Pong =>
               console.println("Pong received") *> store.dispatch(
