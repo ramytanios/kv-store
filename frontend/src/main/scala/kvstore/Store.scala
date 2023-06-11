@@ -18,8 +18,9 @@ object Store {
   ): Resource[F, ff4s.Store[F, State, Action]] = {
 
     val httpClient = HttpClient[F]
-
-    val backendUrl = "http://127.0.0.1:8090/api/kv"
+    val backendBaseUrl = "127.0.0.1:8090"
+    val httpUrl = s"http://$backendBaseUrl/api/kv"
+    val wsUrl = "ws://$backendUrl/ws"
 
     for {
       outMessages <- Queue.unbounded[F, WSProtocol.Client].toResource
@@ -45,16 +46,16 @@ object Store {
                   new ju.NoSuchElementException
                 )
                 _ <- httpClient
-                  .post[KeyValue, Unit](backendUrl, KeyValue(key, value))
+                  .post[KeyValue, Unit](httpUrl, KeyValue(key, value))
               } yield ())
                 .handleErrorWith(error => console.print(error.getMessage))
                 .some
 
           case Action.ClearStore =>
-            _ -> httpClient.delete(backendUrl).some
+            _ -> httpClient.delete(httpUrl).some
 
           case Action.RemoveKeyValue(key) =>
-            _ -> httpClient.delete(s"$backendUrl/$key").some
+            _ -> httpClient.delete(s"$httpUrl/$key").some
         }
       }
 
@@ -68,7 +69,7 @@ object Store {
       _ <- ff4s
         .WebSocketClient[F]
         .bidirectionalJson[WSProtocol.Server, WSProtocol.Client](
-          "ws://127.0.0.1:8090/ws",
+          wsUrl,
           _.evalMap {
             case WSProtocol.Server.Pong =>
               console.println("Pong received") *> store.dispatch(
