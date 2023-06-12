@@ -31,18 +31,21 @@ object Service {
 
       kvStore <- KvStore.make[F, String, String](1000)
 
-      httpRoutesWithLoggerMiddleware = middleware.Logger.httpRoutes[F](
-        logHeaders = false,
-        logBody = true,
-        redactHeadersWhen = _ => false,
-        logAction = ((msg: String) => std.Console[F].println(msg)).some
-      )(
-        Router(
-          "api" -> (new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
-            kvStore
-          ).routes)
+      httpRoutes = middleware.CORS.policy
+        .withAllowOriginAll(
+          middleware.Logger.httpRoutes[F](
+            logHeaders = false,
+            logBody = true,
+            redactHeadersWhen = _ => false,
+            logAction = ((msg: String) => std.Console[F].println(msg)).some
+          )(
+            Router(
+              "api" -> (new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
+                kvStore
+              ).routes)
+            )
+          )
         )
-      )
 
       host <- Resource.eval {
         F.fromOption(
@@ -58,6 +61,7 @@ object Service {
         )
       }
 
+      // queue for outgoing messages
       outMessages <- Queue.unbounded[F, WSProtocol.Server].toResource
 
       // watch changes in store size
@@ -85,7 +89,7 @@ object Service {
             ws,
             outMessages,
             receivePipe
-          ).routes <+> httpRoutesWithLoggerMiddleware).orNotFound
+          ).routes <+> httpRoutes).orNotFound
         )
         .withMaxConnections(32)
         .withIdleTimeout(10.seconds)

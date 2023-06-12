@@ -20,7 +20,7 @@ object Store {
     val httpClient = HttpClient[F]
     val backendBaseUrl = "127.0.0.1:8090"
     val httpUrl = s"http://$backendBaseUrl/api/kv"
-    val wsUrl = "ws://$backendUrl/ws"
+    val wsUrl = s"ws://$backendBaseUrl/ws"
 
     for {
       outMessages <- Queue.unbounded[F, WSProtocol.Client].toResource
@@ -58,6 +58,17 @@ object Store {
             _ -> httpClient.delete(s"$httpUrl/$key").some
         }
       }
+
+      // needed for one page is refreshed is pages, 
+      // the size is not detected to change and hence the table of entries is empty
+      _ <- httpClient
+        .get[List[KeyValue]](httpUrl)
+        .flatMap { entries =>
+          store.dispatch(
+            Action.SetKvEntries(entries.map(pair => (pair.key, pair.value)))
+          )
+        }
+        .toResource
 
       _ <- fs2.Stream
         .fixedDelay(5.seconds)

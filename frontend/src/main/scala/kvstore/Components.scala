@@ -78,8 +78,8 @@ class Components[F[_], S, A] {
           cls := "contents group/row",
           row.map(entry =>
             div(
-              cls := cellCls ++ s" ${if (selectedRow.exists(_ === key)) "bg-active group-hover/row:bg-active-border"
-                else "group-hover/row:bg-row-hover"}",
+              cls := cellCls ++ s" ${if (selectedRow.exists(_ === key)) "bg-red-500 group-hover/row:bg-red-200"
+                else "group-hover/row:bg-red-200"}",
               onClick := (_ => onRowClick(key)),
               entry
             )
