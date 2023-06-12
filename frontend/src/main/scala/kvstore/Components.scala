@@ -53,6 +53,32 @@ class Components[F[_], S, A] {
     }
   }
 
+  // custom input
+  def customInput(
+      input0: Option[String],
+      placeholder0: String,
+      onInput0: (S, String) => Option[A]
+  )(implicit
+      dsl: ff4s.Dsl[F, S, A]
+  ): dsl.V = {
+    import dsl._
+    import dsl.html._
+
+    useState { state =>
+      input(
+        cls := "rounded-md border outline-none w-full h-full overall-y-scroll",
+        placeholder := placeholder0,
+        onInput := ((ev: dom.Event) =>
+          ev.target match {
+            case el: dom.HTMLInputElement => onInput0(state, el.value)
+            case _                         => None
+          }
+        ),
+        value := input0.getOrElse("")
+      )
+    }
+  }
+
   // custom table
   def customTable[RowKey: Eq](
       colNames: List[String],
@@ -69,7 +95,7 @@ class Components[F[_], S, A] {
     val colsCls = s"grid-cols-${colNames.size}"
 
     div(
-      cls := s"grid w-full h-full overflow-y-scroll auto-rows-min $colsCls rounded",
+      cls := s"grid w-full h-full overflow-y-scroll auto-rows-min $colsCls rounded border border-zinc-500",
       // table header
       colNames.map(name => div(cls := headerCls, name)),
       // table body
@@ -78,8 +104,8 @@ class Components[F[_], S, A] {
           cls := "contents group/row border rounded",
           row.map(entry =>
             div(
-              cls := cellCls ++ s" ${if (selectedRow.exists(_ === key)) "bg-red-500 group-hover/row:bg-red-200"
-                else "group-hover/row:bg-red-200"}",
+              cls := cellCls ++ s" ${if (selectedRow.exists(_ === key)) "bg-green-500 group-hover/row:bg-green-200"
+                else "group-hover/row:bg-green-200"}",
               onClick := (_ => onRowClick(key)),
               entry
             )

@@ -19,47 +19,71 @@ object View {
       div(
         cls := "flex flex-col h-screen overflow-hidden bg-zinc-200 h-screen font-mono uppercase",
         headerTag(
-          cls := "w-full text-center border-b p-4 bg-zinc-500 text-xl",
-          div(
-            cls := "flex justify-center text-center",
-            span("key value store"),
-            div(
-              cls := "ml-2 border rounded w-fit flex items-center justify-center",
-              s"${state.kvEntries.size.toString}",
-              span(cls := "left-0", keySvg)
-            )
+          cls := "w-full border-b p-4 bg-zinc-500 text-xl flex justify-center align-center",
+          span("key value store"),
+          span(
+            cls := "relative flex w-2 h-2",
+            span(
+              cls := s"w-full h-full absolute animate-ping rounded-full ${if (state.wsOpen) "bg-green-500"
+                else "bg-red-500"}"
+            ),
+            span(cls := s"relative h-2 w-2 rounded-full ${if (state.wsOpen) "bg-green-500"
+              else "bg-red-500"}")
           )
         ),
         mainTag(
-          cls := "flex-1 overflow-y-scroll p-2",
+          cls := "flex-1 overflow-y-scroll p-2 grid grid-cols-2",
           div(
-            customBtn("Insert", _ => Action.InsertKeyValue.some, _ => false),
-            customText(
-              state.searchKey,
-              "Search key",
-              (_, searchStr) => Action.SetSearchKey(searchStr.some).some
-            )
-          ),
-          div(
-            cls := "flex",
-            customText(
-              state.key,
-              "i.e: Foo",
-              (_, textStr) => Action.SetKey(textStr.some).some
+            cls := "flex flex-col justify-center align-center mx-2",
+            div(
+              cls := "shrink mb-1 flex flex-col",
+              span("Search key"),
+              customInput(
+                state.searchKey,
+                "",
+                (_, searchStr) => Action.SetSearchKey(searchStr.some).some
+              )
             ),
-            customText(
-              state.value,
-              "i.e: {'name': 'bar' 'age': 20 }",
-              (_, textStr) => Action.SetValue(textStr.some).some
+            customTable[String](
+              List("Key", "Value"),
+              state.kvEntries.map { case pair =>
+                (pair._1, List(pair._1, pair._2))
+              },
+              _ => None,
+              None
             )
           ),
-          customTable[String](
-            List("Key", "Value"),
-            state.kvEntries.map { case pair =>
-              (pair._1, List(pair._1, pair._2))
-            },
-            _ => None,
-            None
+          div(
+            div(
+              cls := "flex flex-1 justify-between align-center",
+              customBtn("Insert", _ => Action.InsertKeyValue.some, _ => false),
+              div(
+                cls := "border rounded border-black w-fit flex items-center justify-center",
+                s"${state.kvEntries.size.toString}",
+                span(cls := "left-0", keySvg)
+              )
+            ),
+            div(
+              cls := "flex mt-1 align-center",
+              div(
+                cls := "mr-1 grow flex flex-col",
+                span("Key"),
+                customText(
+                  state.key,
+                  "i.e: some key",
+                  (_, textStr) => Action.SetKey(textStr.some).some
+                )
+              ),
+              div(
+                cls := "grow flex flex-col",
+                span("Value"),
+                customText(
+                  state.value,
+                  "i.e: {'name': 'bar' 'age': 20 }",
+                  (_, textStr) => Action.SetValue(textStr.some).some
+                )
+              )
+            )
           )
         ),
         footerTag(
@@ -68,7 +92,5 @@ object View {
         )
       )
     }
-
   }
-
 }
