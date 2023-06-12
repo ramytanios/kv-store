@@ -72,6 +72,7 @@ object Store {
         }
         .toResource
 
+      // ping the backend every 5 seconds
       _ <- fs2.Stream
         .fixedDelay(5.seconds)
         .evalMap { _ => outMessages.offer(WSProtocol.Client.Ping) }
@@ -79,11 +80,12 @@ object Store {
         .drain
         .background
 
+      // watch search key changes
       _ <- store.state
         .map(_.searchKey)
         .changes
         .discrete
-        .debounce(1.seconds) // throttle 
+        .debounce(1.seconds) // throttle
         .evalMap { searchKey =>
           outMessages.offer(WSProtocol.Client.SearchKey(searchKey))
         }
@@ -91,6 +93,7 @@ object Store {
         .drain
         .background
 
+      // websocket
       _ <- ff4s
         .WebSocketClient[F]
         .bidirectionalJson[WSProtocol.Server, WSProtocol.Client](

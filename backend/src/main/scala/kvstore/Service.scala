@@ -105,8 +105,8 @@ object Service {
         )
         .withMaxConnections(32)
         .withIdleTimeout(10.seconds)
-        .withLogger(logger) // use ?
-        .withErrorHandler(error => BadRequest(error.getMessage)) // improve ?
+        .withLogger(logger) // FIX: use ?
+        .withErrorHandler(error => BadRequest(error.getMessage)) // TODO: improve ?
         .build
         .evalTap { _ => logger.info(s"Server listennig on $host:$port") }
 
