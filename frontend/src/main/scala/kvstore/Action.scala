@@ -10,6 +10,8 @@ object Action {
 
   case class SetValue(value: Option[String]) extends Action
 
+  case class SetSearchKey(key: Option[String]) extends Action
+
   case class SetKvEntries(kvs: List[(String, String)]) extends Action
 
   case object InsertKeyValue extends Action

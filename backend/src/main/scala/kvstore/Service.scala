@@ -64,20 +64,32 @@ object Service {
       // queue for outgoing messages
       outMessages <- Queue.unbounded[F, WSProtocol.Server].toResource
 
+      searchKeyR <- F.ref[Option[String]](None).toResource
+
+      offerFilteredEntries = searchKeyR.get.flatMap {
+        _.fold(kvStore.entries)(sKey =>
+          kvStore.entries.map(_.filter { case (key, _) =>
+            key.contains(sKey)
+          })
+        ).flatMap { entries =>
+          outMessages.offer(WSProtocol.Server.KeyValueEntries(entries))
+        }
+      }
+
       // watch changes in store size
       _ <- kvStore.size.discrete.changes
-        .evalMap { _ =>
-          kvStore.entries.flatMap { entries =>
-            outMessages.offer(WSProtocol.Server.KeyValueEntries(entries))
-          }
-        }
+        .evalMap { _ => offerFilteredEntries }
         .compile
         .drain
         .background
 
       receivePipe = (inStream: fs2.Stream[F, WSProtocol.Client]) =>
-        inStream.evalMap { case WSProtocol.Client.Ping =>
-          outMessages.offer(WSProtocol.Server.Pong)
+        inStream.evalMap {
+          case WSProtocol.Client.Ping =>
+            outMessages.offer(WSProtocol.Server.Pong)
+
+          case WSProtocol.Client.SearchKey(searchKey) =>
+            searchKeyR.set(searchKey) *> offerFilteredEntries
         }
 
       server <- EmberServerBuilder

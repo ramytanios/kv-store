@@ -34,6 +34,8 @@ object Store {
 
           case Action.SetValue(value) => _.copy(value = value) -> none
 
+          case Action.SetSearchKey(key) => _.copy(searchKey = key) -> none
+
           case Action.SetKvEntries(entries) =>
             _.copy(kvEntries = entries) -> none
 
@@ -59,7 +61,7 @@ object Store {
         }
       }
 
-      // needed for one page is refreshed is pages, 
+      // needed for one page is refreshed is pages,
       // the size is not detected to change and hence the table of entries is empty
       _ <- httpClient
         .get[List[KeyValue]](httpUrl)
@@ -73,6 +75,18 @@ object Store {
       _ <- fs2.Stream
         .fixedDelay(5.seconds)
         .evalMap { _ => outMessages.offer(WSProtocol.Client.Ping) }
+        .compile
+        .drain
+        .background
+
+      _ <- store.state
+        .map(_.searchKey)
+        .changes
+        .discrete
+        .debounce(1.seconds) // throttle 
+        .evalMap { searchKey =>
+          outMessages.offer(WSProtocol.Client.SearchKey(searchKey))
+        }
         .compile
         .drain
         .background

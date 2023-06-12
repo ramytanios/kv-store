@@ -64,18 +64,18 @@ class Components[F[_], S, A] {
     import dsl._
     import dsl.html._
 
-    val headerCls = "px-2 sticky text-center top-0 z-20 bg-green-500"
+    val headerCls = "px-2 sticky text-center top-0 z-20 bg-zinc-100"
     val cellCls = "cursor-pointer px-2 text-center"
     val colsCls = s"grid-cols-${colNames.size}"
 
     div(
-      cls := s"grid w-full h-full overflow-y-scroll auto-rows-min $colsCls rounded border",
+      cls := s"grid w-full h-full overflow-y-scroll auto-rows-min $colsCls rounded",
       // table header
       colNames.map(name => div(cls := headerCls, name)),
       // table body
       tableRows.map { case (key, row) =>
         div(
-          cls := "contents group/row",
+          cls := "contents group/row border rounded",
           row.map(entry =>
             div(
               cls := cellCls ++ s" ${if (selectedRow.exists(_ === key)) "bg-red-500 group-hover/row:bg-red-200"

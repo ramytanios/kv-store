@@ -11,16 +11,35 @@ object View {
     val components = new Components[F, State, Action]
     import components._
 
+    val keySvg = literal("""<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+</svg>""")
+
     useState { state =>
       div(
         cls := "flex flex-col h-screen overflow-hidden bg-zinc-200 h-screen font-mono uppercase",
         headerTag(
           cls := "w-full text-center border-b p-4 bg-zinc-500 text-xl",
-          "key value store"
+          div(
+            cls := "flex justify-center text-center",
+            span("key value store"),
+            div(
+              cls := "ml-2 border rounded w-fit flex items-center justify-center",
+              s"${state.kvEntries.size.toString}",
+              span(cls := "left-0", keySvg)
+            )
+          )
         ),
         mainTag(
           cls := "flex-1 overflow-y-scroll p-2",
-          customBtn("Insert", _ => Action.InsertKeyValue.some, _ => false),
+          div(
+            customBtn("Insert", _ => Action.InsertKeyValue.some, _ => false),
+            customText(
+              state.searchKey,
+              "Search key",
+              (_, searchStr) => Action.SetSearchKey(searchStr.some).some
+            )
+          ),
           div(
             cls := "flex",
             customText(
@@ -41,7 +60,7 @@ object View {
             },
             _ => None,
             None
-          ),
+          )
         ),
         footerTag(
           cls := "w-full text-center border-t p-4 bg-zinc-500 text-xl",
