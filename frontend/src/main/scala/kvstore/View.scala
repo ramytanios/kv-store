@@ -46,9 +46,11 @@ object View {
             ),
             customTable[String](
               List("Key", "Value"),
-              state.kvEntries.map { case pair =>
-                (pair._1, List(pair._1, pair._2))
-              },
+              state.kvEntries
+                .sortWith { case ((keyL, _), (keyR, _)) => keyL <= keyR }
+                .map { case pair =>
+                  (pair._1, List(pair._1, pair._2))
+                },
               _ => None,
               None
             )

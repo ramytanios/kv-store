@@ -35,7 +35,7 @@ object Http {
       case GET -> Root =>
         Ok(store.entries.map(_.map { case (key, value) =>
           KeyValue(key, value)
-        }.sortWith((kvL, kvR) => kvL.key <= kvR.key)))
+        }))
 
       // insert a key value pair in the store
       case req @ POST -> Root =>
