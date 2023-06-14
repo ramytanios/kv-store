@@ -13,6 +13,7 @@ object Http {
 
   /** backend alive http endpoints */
   final class AliveRoutes[F[_]: Monad]() extends Http4sDsl[F] {
+
     private val prefixPath = "/alive"
 
     private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
@@ -26,14 +27,15 @@ object Http {
   /** key value store http endpoints */
   final class KvStoreRoutes[F[_]: Concurrent](store: KvStore[F, String, String])
       extends Http4sDsl[F] {
+
     private val prefixPath = "/kv"
 
     private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
-      // return all entries of the store
+      // return all entries of the store (sorted wrt key)
       case GET -> Root =>
         Ok(store.entries.map(_.map { case (key, value) =>
           KeyValue(key, value)
-        }))
+        }.sortWith((kvL, kvR) => kvL.key <= kvR.key)))
 
       // insert a key value pair in the store
       case req @ POST -> Root =>
