@@ -3,7 +3,7 @@ package kvstore
 import cats.syntax.all._
 
 final case class State(
-    wsOpen: Boolean = true,
+    wsOpen: Boolean = false,
     key: Option[String] = none[String],
     value: Option[String] = none[String],
     kvEntries: List[(String, String)] = Nil,

@@ -64,7 +64,7 @@ object Service {
       // queue for outgoing messages
       outMessages <- Queue.unbounded[F, WSProtocol.Server].toResource
 
-      searchKeyR <- F.ref[Option[String]](None).toResource
+      searchKeyR <- F.ref(none[String]).toResource
 
       offerFilteredEntries = searchKeyR.get.flatMap {
         _.fold(kvStore.entries)(sKey =>

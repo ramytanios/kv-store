@@ -70,6 +70,7 @@ object Store {
             Action.SetKvEntries(entries.map(pair => (pair.key, pair.value)))
           )
         }
+        .handleErrorWith { error => console.print(error.getMessage) }
         .toResource
 
       // ping the backend every 5 seconds
