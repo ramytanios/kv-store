@@ -18,7 +18,7 @@ import fs2.io.net.Network
 
 object Service {
 
-  def serviceR[F[_]: Network: std.Console](implicit
+  def serviceR[F[_]: Network](implicit
       F: Async[F]
   ): Resource[F, Server] = {
 
@@ -36,8 +36,7 @@ object Service {
           middleware.Logger.httpRoutes[F](
             logHeaders = false,
             logBody = true,
-            redactHeadersWhen = _ => false,
-            logAction = ((msg: String) => std.Console[F].println(msg)).some
+            logAction = ((msg: String) => logger.info(msg)).some
           )(
             Router(
               "api" -> (new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
@@ -96,16 +95,16 @@ object Service {
         .default[F]
         .withHost(host)
         .withPort(port)
-        .withHttpWebSocketApp(ws =>
+        .withHttpWebSocketApp(websocketBuilder =>
           (new Websocket(
-            ws,
+            websocketBuilder
+            ,
             outMessages,
             receivePipe
           ).routes <+> httpRoutes).orNotFound
         )
         .withMaxConnections(32)
         .withIdleTimeout(10.seconds)
-        .withLogger(logger) // FIX: use ?
         .withErrorHandler(error => BadRequest(error.getMessage)) // TODO: improve ?
         .build
         .evalTap { _ => logger.info(s"Server listennig on $host:$port") }

@@ -22,6 +22,8 @@ object Store {
     val httpUrl = s"http://$backendBaseUrl/api/kv"
     val wsUrl = s"ws://$backendBaseUrl/ws"
 
+    def log[F[_]: std.Console](msg: String) = std.Console[F].println(msg)
+
     for {
       outMessages <- Queue.unbounded[F, WSProtocol.Client].toResource
 
@@ -50,7 +52,7 @@ object Store {
                 _ <- httpClient
                   .post[KeyValue, Unit](httpUrl, KeyValue(key, value))
               } yield ())
-                .handleErrorWith(error => console.print(error.getMessage))
+                .handleErrorWith(error => log(error.getMessage))
                 .some
 
           case Action.ClearStore =>
@@ -70,7 +72,7 @@ object Store {
             Action.SetKvEntries(entries.map(pair => (pair.key, pair.value)))
           )
         }
-        .handleErrorWith { error => console.print(error.getMessage) }
+        .handleErrorWith { error => log(error.getMessage) }
         .toResource
 
       // ping the backend every 5 seconds
@@ -101,7 +103,7 @@ object Store {
           wsUrl,
           _.evalMap {
             case WSProtocol.Server.Pong =>
-              console.println("Pong received") *> store.dispatch(
+              log("Pong received") *> store.dispatch(
                 Action.SetWsOpen(true)
               )
             case WSProtocol.Server.KeyValueEntries(entries) =>
