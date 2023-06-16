@@ -31,6 +31,10 @@ object Service {
 
       kvStore <- KvStore.make[F, String, String](1000)
 
+      tableUpdate <- fs2.concurrent.SignallingRef
+        .of[F, Boolean](true)
+        .toResource
+
       httpRoutes = middleware.CORS.policy
         .withAllowOriginAll(
           middleware.Logger.httpRoutes[F](
@@ -40,7 +44,7 @@ object Service {
           )(
             Router(
               "api" -> (new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
-                kvStore
+                kvStore, tableUpdate
               ).routes)
             )
           )
@@ -76,8 +80,8 @@ object Service {
       }
 
       // watch changes in store size
-      _ <- kvStore.size.discrete.changes
-        .evalMap { _ => offerFilteredEntries }
+      _ <- tableUpdate.discrete.changes
+        .evalMap { _ => offerFilteredEntries *> F.delay { println("Changed!")} }
         .compile
         .drain
         .background
@@ -97,15 +101,16 @@ object Service {
         .withPort(port)
         .withHttpWebSocketApp(websocketBuilder =>
           (new Websocket(
-            websocketBuilder
-            ,
+            websocketBuilder,
             outMessages,
             receivePipe
           ).routes <+> httpRoutes).orNotFound
         )
         .withMaxConnections(32)
         .withIdleTimeout(10.seconds)
-        .withErrorHandler(error => BadRequest(error.getMessage)) // TODO: improve ?
+        .withErrorHandler(error =>
+          BadRequest(error.getMessage)
+        ) // TODO: improve ?
         .build
         .evalTap { _ => logger.info(s"Server listennig on $host:$port") }
 
