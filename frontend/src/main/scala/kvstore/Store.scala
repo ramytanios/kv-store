@@ -22,7 +22,7 @@ object Store {
     val httpUrl = s"http://$backendBaseUrl/api/kv"
     val wsUrl = s"ws://$backendBaseUrl/ws"
 
-    def log[F[_]: std.Console](msg: String) = std.Console[F].println(msg)
+    def log(msg: String) = std.Console[F].println(msg)
 
     for {
       outMessages <- Queue.unbounded[F, WSProtocol.Client].toResource
