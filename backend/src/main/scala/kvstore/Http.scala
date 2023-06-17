@@ -26,8 +26,7 @@ object Http {
 
   /** key value store http endpoints */
   final class KvStoreRoutes[F[_]: Concurrent](
-      store: KvStore[F, String, String],
-      tableUpdate: fs2.concurrent.SignallingRef[F, Boolean]
+      store: KvStore[F, String, String]
   ) extends Http4sDsl[F] {
 
     private val prefixPath = "/kv"
@@ -42,21 +41,21 @@ object Http {
       // insert a key value pair in the store
       case req @ POST -> Root =>
         // val responseF =
-        (for {
+        for {
           keyValue <- req.as[KeyValue]
           _ <- store.insert(keyValue.key, keyValue.value)
           response <- Ok()
-        } yield response).flatTap { _ => tableUpdate.getAndUpdate(!_) }
+        } yield response
 
       // delete a specific kv pair
       case DELETE -> Root / key =>
         store
           .remove(key)
-          .flatMap(_ => tableUpdate.getAndUpdate(!_) *> Ok())
+          .flatMap(_ => Ok())
 
       // clear the store
       case DELETE -> Root =>
-        store.clear.flatMap(_ => tableUpdate.getAndUpdate(!_) *> Ok())
+        store.clear.flatMap(_ => Ok())
     }
 
     val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)

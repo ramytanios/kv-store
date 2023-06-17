@@ -29,11 +29,13 @@ object Service {
 
       logger <- Slf4jLogger.create[F].toResource
 
-      kvStore <- KvStore.make[F, String, String](1000)
+      storeMaxSize <- F.pure(100).toResource
 
       tableUpdate <- fs2.concurrent.SignallingRef
         .of[F, Boolean](true)
         .toResource
+
+      kvStore <- KvStore.make[F, String, String](storeMaxSize, tableUpdate)
 
       httpRoutes = middleware.CORS.policy
         .withAllowOriginAll(
@@ -44,7 +46,7 @@ object Service {
           )(
             Router(
               "api" -> (new AliveRoutes[F]().routes <+> new KvStoreRoutes[F](
-                kvStore, tableUpdate
+                kvStore
               ).routes)
             )
           )
@@ -81,7 +83,9 @@ object Service {
 
       // watch changes in store size
       _ <- tableUpdate.discrete.changes
-        .evalMap { _ => offerFilteredEntries *> F.delay { println("Changed!")} }
+        .evalMap { _ =>
+          offerFilteredEntries *> F.delay { println("Changed!") }
+        }
         .compile
         .drain
         .background
