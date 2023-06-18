@@ -4,6 +4,7 @@ import cats._
 import cats.effect._
 import cats.implicits._
 import kvstore.dtos.Dtos._
+import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec._
 import org.http4s.dsl.Http4sDsl
@@ -36,7 +37,7 @@ object Http {
       case GET -> Root =>
         Ok(store.entries.map(_.map { case (key, value) =>
           KeyValue(key, value)
-        }))
+        })) 
 
       // insert a key value pair in the store
       case req @ POST -> Root =>
@@ -44,18 +45,18 @@ object Http {
         for {
           keyValue <- req.as[KeyValue]
           _ <- store.insert(keyValue.key, keyValue.value)
-          response <- Ok()
+          response <- NoContent()
         } yield response
 
       // delete a specific kv pair
       case DELETE -> Root / key =>
         store
           .remove(key)
-          .flatMap(_ => Ok())
+          .flatMap(_ => NoContent()) 
 
       // clear the store
       case DELETE -> Root =>
-        store.clear.flatMap(_ => Ok())
+        store.clear.flatMap(_ => NoContent()) 
     }
 
     val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)

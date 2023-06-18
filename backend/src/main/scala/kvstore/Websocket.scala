@@ -11,7 +11,7 @@ import org.http4s.server.Router
 import org.http4s.server.websocket.WebSocketBuilder2
 import org.http4s.websocket.WebSocketFrame
 
-case class Websocket[F[_]](
+final class Websocket[F[_]](
     ws: WebSocketBuilder2[F],
     sendQueue: Queue[F, WSProtocol.Server],
     receivePipe: fs2.Stream[F, WSProtocol.Client] => fs2.Stream[F, Unit]
