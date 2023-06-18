@@ -84,7 +84,7 @@ object Service {
         }
       }
 
-      // watch changes in store size
+      // watch store update events
       _ <- storeUpdateEvent.discrete.changes
         .evalMap(_ => offerFilteredEntries)
         .compile
