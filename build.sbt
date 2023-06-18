@@ -52,6 +52,7 @@ lazy val backend =
         "org.typelevel" %% "cats-effect-kernel" % catsEffectVersion,
         "org.typelevel" %% "cats-effect-std" % catsEffectVersion,
         "org.typelevel" %% "log4cats-slf4j" % log4CatsVersion,
+        "ch.qos.logback" % "logback-classic" % "1.2.10",
         "org.http4s" %% "http4s-dsl" % http4sVersion,
         "org.http4s" %% "http4s-circe" % http4sVersion,
         "org.http4s" %% "http4s-ember-server" % http4sVersion,
