@@ -50,7 +50,7 @@ object Store {
                   new ju.NoSuchElementException
                 )
                 _ <- httpClient
-                  .post[KeyValue, Unit](httpUrl, KeyValue(key, value))
+                  .post[KeyValue, String](httpUrl, KeyValue(key, value))
               } yield ())
                 .handleErrorWith(error => log(error.getMessage))
                 .some

@@ -45,7 +45,7 @@ object Http {
         for {
           keyValue <- req.as[KeyValue]
           _ <- store.insert(keyValue.key, keyValue.value)
-          response <- NoContent()
+          response <- Created(keyValue.key.asJson)
         } yield response
 
       // delete a specific kv pair
