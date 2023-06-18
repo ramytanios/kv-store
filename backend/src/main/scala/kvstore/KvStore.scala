@@ -38,9 +38,9 @@ object KvStore {
     * maximum size. The store emits update events when its updated (key value
     * pair added, key value pair removed, etc ...)
     */
-  def make[F[_], K, V](
+  def apply[F[_], K, V](
       maxSize: Int,
-      updateEvent: fs2.concurrent.SignallingRef[F, Boolean]
+      updateEventF: F[Unit]
   )(implicit
       F: Concurrent[F]
   ): Resource[F, KvStore[F, K, V]] =
@@ -48,11 +48,9 @@ object KvStore {
       storeR <- fs2.concurrent.SignallingRef(Map.empty[K, V]).toResource
     } yield new KvStore[F, K, V] {
 
-      private val emitUpdate: F[Unit] = updateEvent.getAndUpdate(!_).void
-
       override def insert(key: K, value: V): F[Unit] =
         F.ifM(storeR.get.map(_.size < maxSize))(
-          storeR.update(_.updated(key, value)).flatTap(_ => emitUpdate),
+          storeR.update(_.updated(key, value)).flatTap(_ => updateEventF),
           F.raiseError(
             new KvStoreMaxSizeReachedException(s"Max size $maxSize reached.")
           )
@@ -71,12 +69,12 @@ object KvStore {
           }
 
       override def remove(key: K): F[Unit] =
-        storeR.update(_.removed(key)).flatTap { _ => emitUpdate }
+        storeR.update(_.removed(key)).flatTap(_ => updateEventF)
 
       override def entries: F[List[(K, V)]] = storeR.get.map(_.toList)
 
       override def clear: F[Unit] =
-        storeR.set(Map.empty[K, V]).flatTap(_ => emitUpdate)
+        storeR.set(Map.empty[K, V]).flatTap(_ => updateEventF)
 
       override def size: Signal[F, Int] = storeR.map(_.size)
 

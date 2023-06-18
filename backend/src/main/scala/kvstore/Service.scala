@@ -29,13 +29,16 @@ object Service {
 
       logger <- Slf4jLogger.create[F].toResource
 
-      storeMaxSize <- F.pure(100).toResource
+      storeMaxSize = 1000
 
       tableUpdate <- fs2.concurrent.SignallingRef
         .of[F, Boolean](true)
         .toResource
 
-      kvStore <- KvStore.make[F, String, String](storeMaxSize, tableUpdate)
+      kvStore <- KvStore[F, String, String](
+        storeMaxSize,
+        tableUpdate.getAndUpdate(!_).void
+      )
 
       httpRoutes = middleware.CORS.policy
         .withAllowOriginAll(
