@@ -31,13 +31,13 @@ object Service {
 
       storeMaxSize = 1000
 
-      tableUpdate <- fs2.concurrent.SignallingRef
+      storeUpdateEvent <- fs2.concurrent.SignallingRef
         .of[F, Boolean](true)
         .toResource
 
       kvStore <- KvStore[F, String, String](
         storeMaxSize,
-        tableUpdate.getAndUpdate(!_).void
+        storeUpdateEvent.getAndUpdate(!_).void
       )
 
       httpRoutes = middleware.CORS.policy
@@ -85,7 +85,7 @@ object Service {
       }
 
       // watch changes in store size
-      _ <- tableUpdate.discrete.changes
+      _ <- storeUpdateEvent.discrete.changes
         .evalMap { _ =>
           offerFilteredEntries *> F.delay { println("Changed!") }
         }
